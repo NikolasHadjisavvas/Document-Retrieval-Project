@@ -1,5 +1,4 @@
 import math
-import matplotlib
 
 class Retrieve:
     
@@ -43,5 +42,6 @@ class Retrieve:
     # Method for returning the document frequency of a term/word specified as a parameter.
     def compute_doc_freq(self, word):
         dfw = len(self.index[word])
+        #test for commit
         return dfw
 
