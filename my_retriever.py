@@ -15,7 +15,6 @@ class Retrieve:
             self.idfs = self.compute_idf_for_all_terms()
         self.all_document_vectors,self.all_document_vec_lengths=self.construct_all_document_vectors()
         
-        print(self.all_document_vec_lengths)
 
 
     def compute_number_of_documents(self):
@@ -107,7 +106,9 @@ class Retrieve:
         if self.term_weighting=='tf':
             vector={}
             for word in query:
-                vector[word]=query.count(word)
+                if word in self.index:
+                    vector[word]=query.count(word)
+
 
         return vector
 
@@ -153,35 +154,4 @@ class Retrieve:
             sorted_scores=collections.OrderedDict(sorted_score_values)
             
             return list(sorted_scores.keys())[:10]
-
-    """ #JUST FOR TESTING
-        def forQuery(self, query):
-            query_vector = self.construct_vector_for_query(query)
-            doc_vectors= self.all_document_vectors
-
-
-            scores={}
-
-            candidates=set()
-            for word in query:
-                if word in self.index:
-                    candidates.update(self.index[word].keys())
-
-            for i in candidates:
-                #compute numerator
-                numer = 0
-                for word in list(query_vector.keys()):
-                    if word in list(doc_vectors[i].keys()):
-                        numer+=query_vector[word] * doc_vectors[i][word]
-                        print('Mult. '+str(query_vector[word])+' of query with '+str(doc_vectors[i][word])+' of vector '+str(i), query_vector[word] * doc_vectors[i][word])
-                
-                
-                denom = self.compute_vector_length(doc_vectors[i])
-                
-                scores[i] = numer/denom
-                print('End for doc'+str(i)+' numerator is '+str(scores[i]))
-
-            sorted_score_values = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
-            sorted_scores=collections.OrderedDict(sorted_score_values)
             
-            return list(sorted_scores.keys())[:10]"""
