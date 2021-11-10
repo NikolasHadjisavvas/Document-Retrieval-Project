@@ -16,14 +16,19 @@ OPTIONS:
 import sys
 import getopt
 import pickle
+import time
+
 
 from my_retriever import Retrieve
 
 #==============================================================================
 # Command line processing
 
+start_time = time.time()
+
 class CommandLine:
     def __init__(self):
+        
         opts, args = getopt.getopt(sys.argv[1:], 'hspw:o:')
         opts = dict(opts)
         self.exit = True
@@ -121,5 +126,6 @@ if __name__ == '__main__':
         results = retrieve.for_query(query)
         all_results.store(qid, results)
 
+    print("--- %s seconds ---" % (time.time() - start_time))
     all_results.output(config.outfile)
 

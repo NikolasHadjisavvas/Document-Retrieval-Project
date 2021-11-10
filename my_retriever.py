@@ -1,5 +1,6 @@
 import math
 import collections
+import time
 
 class Retrieve:
     
@@ -13,8 +14,6 @@ class Retrieve:
         if self.term_weighting=='tfidf':
             self.idfs = self.compute_idf_for_all_terms()
         self.all_document_vectors,self.all_document_vec_lengths=self.construct_all_document_vectors()
-        print('done')
-
 
     def compute_number_of_documents(self):
         self.doc_ids = set()
@@ -35,15 +34,16 @@ class Retrieve:
         all_doc_vectors={}
         doc_vector_element_summations={} #Initialise dict with the element wise summation of a vector.{doc vector->sum}.We use that later to apply sqrt and get the lenghts.
  
-        for term in self.index.keys():
+        for term in self.ALL_TERMS:
+            idf = self.idfs[term]
             for doc in self.index[term]:
                 if self.term_weighting == 'tfidf':
                     if doc not in all_doc_vectors:
                         tf=self.index[term][doc]
-                        idf = self.idfs[term]
                         all_doc_vectors[doc] = {term: tf*idf}
                         doc_vector_element_summations[doc]= (tf * idf)**2
                     else: # In case the vector has already been initialised, just update its content.
+                        tf=self.index[term][doc]
                         all_doc_vectors[doc][term] = tf * idf
                         doc_vector_element_summations[doc]+= (tf * idf)**2
                 if self.term_weighting == 'tf':
@@ -112,7 +112,6 @@ class Retrieve:
     # of doc ids for relevant docs (in rank order).
     def for_query(self, query):
             query_vector = self.construct_vector_for_query(query)
-            doc_vectors= self.all_document_vectors
             scores={}
 
             # Get all documents containing at least one query term.
@@ -124,9 +123,9 @@ class Retrieve:
             for i in candidates:
                 #compute numerator
                 numer = 0
-                for word in list(query_vector.keys()):
-                    if word in list(doc_vectors[i].keys()):
-                        numer+=query_vector[word] * doc_vectors[i][word]
+                for word in query_vector.keys():
+                    if word in self.all_document_vectors[i].keys():
+                        numer+=query_vector[word] * self.all_document_vectors[i][word]
                 
                 denom = self.all_document_vec_lengths[i]
                 
