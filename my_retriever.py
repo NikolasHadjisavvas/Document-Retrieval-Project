@@ -13,20 +13,18 @@ class Retrieve:
         if self.term_weighting=='tfidf':
             self.idfs = self.compute_idf_for_all_terms()
         self.all_document_vectors,self.all_document_vec_lengths=self.construct_all_document_vectors()
-        
+        print('done')
+
 
     def compute_number_of_documents(self):
         self.doc_ids = set()
         for term in self.index:
             self.doc_ids.update(self.index[term])
         return len(self.doc_ids)
-
-
-    # Method for commputing the inverted document frequency of 
-    # each term in the collection.
-    # idf of a word(w) in a document collection(D) is: log(|D|/dfw) --> log of the total number of documents in collection over the number of documents containing w.
+        
+        
     def compute_idf_for_all_terms(self):
-        total_doc_number = self.compute_number_of_documents()  
+        total_doc_number = self.compute_number_of_documents()
         idfs = {}
         for term in self.ALL_TERMS:
             idfs[term] = math.log10(total_doc_number/self.compute_doc_freq(term))
@@ -37,38 +35,33 @@ class Retrieve:
         all_doc_vectors={}
         doc_vector_element_summations={} #Initialise dict with the element wise summation of a vector.{doc vector->sum}.We use that later to apply sqrt and get the lenghts.
  
-        #Iterate over all terms in index
-        for term in self.ALL_TERMS:
-            #For each document in the collection, compute the chosen term weighting for its terms.
-            for doc in range(1,self.num_docs+1): 
-                if doc in self.index[term]: #if doc contains term(thus, we drop all the vector elements that are going to be 0)
-                    tf = self.index[term][doc] #Compute the tf of each term in each document(just by indexing the index)
-                    if self.term_weighting=='tfidf':
-                        idf = self.idfs[term] # Get the corresponding precomputed idf. 
-
-                        # Since we take each term in index one by one, our vectors are going to be updated step by step in each loop of the outer for.
-                        # Here we initialize the vector in case we found a term belonging to a specific document for the 1st time.
-                        if doc not in all_doc_vectors: 
-                            all_doc_vectors[doc] = {term:tf * idf}
-                            doc_vector_element_summations[doc]= (tf * idf)**2
-                        else: # In case the vector has already been initialised, just update its content.
-                            all_doc_vectors[doc][term] = tf * idf
-                            doc_vector_element_summations[doc]+= (tf * idf)**2
-                    elif self.term_weighting =='tf': # Same as above but with tf
-                        if doc not in all_doc_vectors:
-                            all_doc_vectors[doc] = {term:tf}
-                            doc_vector_element_summations[doc]= tf**2
-                        else:
-                            all_doc_vectors[doc][term] = tf
-                            doc_vector_element_summations[doc]+= tf**2
-                    elif self.term_weighting=='binary': # Same as above with tf
-                        if doc not in all_doc_vectors:
-                            all_doc_vectors[doc] = {term:1} # If term is in document, then weight in vector is 1.
-                            doc_vector_element_summations[doc]= 1**2
-                        else:
-                            all_doc_vectors[doc][term] = 1
-                            doc_vector_element_summations[doc]+= 1**2                      
-
+        for term in self.index.keys():
+            for doc in self.index[term]:
+                if self.term_weighting == 'tfidf':
+                    if doc not in all_doc_vectors:
+                        tf=self.index[term][doc]
+                        idf = self.idfs[term]
+                        all_doc_vectors[doc] = {term: tf*idf}
+                        doc_vector_element_summations[doc]= (tf * idf)**2
+                    else: # In case the vector has already been initialised, just update its content.
+                        all_doc_vectors[doc][term] = tf * idf
+                        doc_vector_element_summations[doc]+= (tf * idf)**2
+                if self.term_weighting == 'tf':
+                    if doc not in all_doc_vectors:
+                        tf=self.index[term][doc]
+                        all_doc_vectors[doc] = {term: tf}
+                        doc_vector_element_summations[doc]= tf**2
+                    else: # In case the vector has already been initialised, just update its content.
+                        all_doc_vectors[doc][term] = tf
+                        doc_vector_element_summations[doc]+= tf**2
+                if self.term_weighting == 'binary':
+                    if doc not in all_doc_vectors:
+                        all_doc_vectors[doc] = {term: 1}
+                        doc_vector_element_summations[doc]= 1**2
+                    else: # In case the vector has already been initialised, just update its content.
+                        all_doc_vectors[doc][term] = 1
+                        doc_vector_element_summations[doc]+= 1**2
+            
         doc_vector_lengths={} #Initialise a dictionary {doc vector->doc length} to store vector lenghts.
 
         # Compute sqrt of element sums of vector elements to get lengths.
@@ -143,4 +136,3 @@ class Retrieve:
             sorted_scores=collections.OrderedDict(sorted_score_values)
             
             return list(sorted_scores.keys())[:10]
-
